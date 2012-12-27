@@ -1022,6 +1022,12 @@ class MinecraftClient{
 				console("[ERROR] Old Version", true, true, 0);
 				$this->close();
 				break;
+                        case "User not premium":
+                                $this->auth["user"] = $username;
+                                $this->auth["password"] = $password;
+                                $this->auth["session_id"] = time();
+                                console("[WARNING] User is NOT Premium", true, true, 1);
+                                break;
 			default:
 				$content = explode(":",$response);
 				if(!is_array($content) or count($content) === 1){
@@ -1046,12 +1052,15 @@ class MinecraftClient{
 			$this->loginMinecraft($this->auth["user"], $this->auth["password"]);
 		}
 		$res = Utils::curl_get("http://session.minecraft.net/game/joinserver.jsp?user=".$this->auth["user"]."&sessionId=".$this->auth["session_id"]."&serverId=".$hash); //User check
-		if($res != "OK"){
-			console("[ERROR] Error in User Check: \"".$res."\"", true, true, 0);
-			$this->close();
-		}else{
-			console("[DEBUG] Sent join server request", true, true, 2);
-		}
+                if ($res == "OK") {
+                        console("[DEBUG] Sent join server request", true, true, 2);
+                } elseif ($res == "User not premium") {
+                        console("[INFO] Can't join Premium Server", true, true, 0);
+                        $this->close();
+                } else {
+                        console("[ERROR] Error in User Check: \"".$res."\"", true, true, 0);
+                        $this->close();
+                };
 	}
 	
 	protected function newAuthentication($data, $event){
